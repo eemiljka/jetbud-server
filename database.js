@@ -13,13 +13,15 @@ const pool = mysql
   .promise();
 
 async function getExpenses() {
-  const [rows] = await pool.query("SELECT * FROM expenses");
+  const [rows] = await pool.query(
+    "SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses"
+  );
   return rows;
 }
 
 async function getExpenseById(id) {
   const [rows] = await pool.query(
-    "SELECT * FROM expenses WHERE expense_id = ?",
+    "SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses WHERE expense_id = ?",
     [id]
   );
   return rows[0];
