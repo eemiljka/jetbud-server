@@ -1,6 +1,12 @@
 import express from "express";
 
-import { getExpenseById, getExpenses, addExpense } from "./database.js";
+import {
+  getExpenseById,
+  getExpenses,
+  addExpense,
+  deleteExpense,
+  updateExpense,
+} from "./database.js";
 import cors from "cors";
 
 const app = express();
@@ -8,6 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+/******* ROUTES *******/
 app.get("/expenses", (req, res) => {
   getExpenses().then((expenses) => {
     res.json(expenses);
@@ -28,6 +35,28 @@ app.post("/expenses", express.json(), (req, res) => {
   addExpense(req.body.description, req.body.expense_sum).then((expense) => {
     res.status(201).json(expense);
   });
+});
+
+app.delete("/expenses/:id", (req, res) => {
+  deleteExpense(req.params.id).then((result) => {
+    if (result.affectedRows) {
+      res.status(204).send();
+    } else {
+      res.status(404).send("Expense not found");
+    }
+  });
+});
+
+app.put("/expenses/:id", (req, res) => {
+  updateExpense(req.params.id, req.body.description, req.body.expense_sum).then(
+    (result) => {
+      if (result.affectedRows) {
+        res.status(204).send();
+      } else {
+        res.status(404).send("Expense not found");
+      }
+    }
+  );
 });
 
 app.use((err, req, res, next) => {
