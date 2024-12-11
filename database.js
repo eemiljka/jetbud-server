@@ -14,6 +14,8 @@ const pool = mysql
   })
   .promise();
 
+/******** EXPENSES ********/
+
 // Function to get all expenses from the database
 async function getExpenses() {
   const [rows] = await pool.query(
@@ -59,10 +61,21 @@ async function updateExpense(id, description, expense_sum) {
   return result;
 }
 
+/******** ASSETS ********/
+
+// Function to get all assets from the database
+async function getAssets() {
+  const [rows] = await pool.query(
+    "SELECT asset_id, description, CAST(asset_sum AS DECIMAL(10,2)) AS asset_sum FROM assets"
+  );
+  return rows;
+}
+
 export {
   getExpenses,
   addExpense,
   getExpenseById,
   deleteExpense,
   updateExpense,
+  getAssets,
 };

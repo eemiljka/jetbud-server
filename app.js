@@ -6,6 +6,7 @@ import {
   addExpense,
   deleteExpense,
   updateExpense,
+  getAssets,
 } from "./database.js";
 import cors from "cors";
 
@@ -15,6 +16,8 @@ app.use(express.json());
 app.use(cors());
 
 /******* ROUTES *******/
+
+//  EXPENSES
 app.get("/expenses", (req, res) => {
   getExpenses().then((expenses) => {
     res.json(expenses);
@@ -57,6 +60,13 @@ app.put("/expenses/:id", (req, res) => {
       }
     }
   );
+});
+
+// ASSETS
+app.get("/assets", (req, res) => {
+  getAssets().then((assets) => {
+    res.json(assets);
+  });
 });
 
 app.use((err, req, res, next) => {
