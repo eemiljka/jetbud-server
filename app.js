@@ -74,10 +74,8 @@ app.get("/assets", (req, res) => {
 
 /******** AUTHENTICATION ********/
 
-// AUTHENTICATION
 // Register
 app.post("/register", async (req, res) => {
-  // TODO: Implement user registration
   try {
     // Get user input
     const { username, password, email } = req.body;
@@ -126,8 +124,43 @@ app.post("/register", async (req, res) => {
 });
 
 // Login
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   // TODO: Implement user login
+  try {
+    // Get user input
+    const { username, password } = req.body;
+
+    // Validate user input
+    if (!(username && password)) {
+      res.status(400).send("All input is required");
+    }
+    // Validate if user exists in our database
+    const [user] = await pool.query("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+
+    if (user.length > 0) {
+      // Validate user password
+      const validPassword = await bcrypt.compare(password, user[0].password);
+      if (validPassword) {
+        // Create token
+        const token = jwt.sign(
+          { user_id: user.user_id, email: user.email },
+          process.env.TOKEN_KEY,
+          {
+            expiresIn: "2h",
+          }
+        );
+        // Save user token
+        user[0].token = token;
+
+        return res.status(200).json(user[0]);
+      }
+      return res.status(400).send("Invalid Credentials");
+    }
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 app.use((err, req, res, next) => {
