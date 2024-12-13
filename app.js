@@ -8,7 +8,10 @@ import {
   updateExpense,
   getAssets,
 } from "./database.js";
+import jwt from "jsonwebtoken";
+import pool from "./database.js";
 import cors from "cors";
+import bcrypt from "bcrypt";
 
 const app = express();
 
@@ -67,6 +70,64 @@ app.get("/assets", (req, res) => {
   getAssets().then((assets) => {
     res.json(assets);
   });
+});
+
+/******** AUTHENTICATION ********/
+
+// AUTHENTICATION
+// Register
+app.post("/register", async (req, res) => {
+  // TODO: Implement user registration
+  try {
+    // Get user input
+    const { username, password, email } = req.body;
+
+    // Validate user input
+    if (!(username && password && email)) {
+      res.status(400).send("All input is required");
+    }
+
+    // Check if user already exists
+    // Validate if user exists in our database
+    const [old] = await pool.query("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+    if (old.length > 0) {
+      return res.status(409).send("User Already Exist. Please Login");
+    }
+
+    // Encrypt user password
+    const encryptedPassword = await bcrypt.hash(password, 10);
+
+    // Create user in our database
+    const user = await pool.query(
+      " INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+      [username, email, encryptedPassword]
+    );
+
+    // Create token
+    const token = jwt.sign(
+      { user_id: user.user_id, email },
+      process.env.TOKEN_KEY,
+      {
+        expiresIn: "2h",
+      }
+    );
+    user.token = token;
+
+    // Remove password from response
+    user.password = "";
+
+    // Return new user
+    res.status(201).json(user);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// Login
+app.post("/login", (req, res) => {
+  // TODO: Implement user login
 });
 
 app.use((err, req, res, next) => {

@@ -14,6 +14,8 @@ const pool = mysql
   })
   .promise();
 
+export default pool;
+
 /******** EXPENSES ********/
 
 // Function to get all expenses from the database
