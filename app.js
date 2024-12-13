@@ -12,6 +12,8 @@ import jwt from "jsonwebtoken";
 import pool from "./database.js";
 import cors from "cors";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import { verifyToken } from "./middleware/auth.js";
 
 const app = express();
 
@@ -161,6 +163,12 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.log(err);
   }
+});
+
+// Verify Token
+
+app.get("/tokenIsValid", verifyToken, (req, res) => {
+  res.status(200).send("Token is valid");
 });
 
 app.use((err, req, res, next) => {
