@@ -17,8 +17,14 @@ import { verifyToken } from "./middleware/auth.js";
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 app.use(cors());
+
+// CORS options
+const corsOptions = {
+  origin: "http://localhost:8080",
+  optionSuccessStatus: 200,
+};
 
 /******* ROUTES *******/
 
@@ -167,7 +173,7 @@ app.post("/login", async (req, res) => {
 
 // Verify Token
 
-app.get("/tokenIsValid", verifyToken, (req, res) => {
+app.get("/tokenIsValid", cors(corsOptions), verifyToken, (req, res) => {
   res.status(200).send("Token is valid");
 });
 
