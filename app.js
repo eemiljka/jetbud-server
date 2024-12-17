@@ -171,6 +171,11 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Logout
+app.post("/logout", verifyToken, (req, res) => {
+  return res.status(200).json({ message: "Successfully logged out" });
+});
+
 // Verify Token
 
 app.get("/tokenIsValid", cors(corsOptions), verifyToken, (req, res) => {
