@@ -73,6 +73,38 @@ async function getAssets() {
   return rows;
 }
 
+async function getAssetById(id) {
+  const [rows] = await pool.query(
+    "SELECT asset_id, description, CAST(asset_sum AS DECIMAL (10,2)) AS asset_sum FROM assets WHERE asset_id = ?",
+    [id]
+  );
+  return rows;
+}
+
+async function addAsset(description, asset_sum) {
+  const [result] = await pool.query(
+    "INSERT INTO assets (description, asset_sum) VALUES (?, ?)",
+    [description, expense_sum]
+  );
+  const id = result.insertId;
+  return await getAssetById(id);
+}
+
+async function deleteAsset(id) {
+  const [result] = await pool.query("DELETE FROM assets WHERE asset_id = ?", [
+    id,
+  ]);
+  return result;
+}
+
+async function updateAsset(id, description, asset_sum) {
+  const [result] = await pool.query(
+    "UPDATE assets SET description = ?, asset_sum = ? WHERE asset_id = ?",
+    [description, asset_sum, id]
+  );
+  return result;
+}
+
 export {
   getExpenses,
   addExpense,
@@ -80,4 +112,8 @@ export {
   deleteExpense,
   updateExpense,
   getAssets,
+  getAssetById,
+  addAsset,
+  deleteAsset,
+  updateAsset,
 };
