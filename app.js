@@ -7,6 +7,10 @@ import {
   deleteExpense,
   updateExpense,
   getAssets,
+  getAssetById,
+  addAsset,
+  deleteAsset,
+  updateAsset,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -78,6 +82,34 @@ app.get("/assets", (req, res) => {
   getAssets().then((assets) => {
     res.json(assets);
   });
+});
+
+app.get("/assets/:id", (req, res) => {
+  getAssetById(req.params.id).then((asset) => {
+    if (asset) {
+      res.json(asset);
+    } else {
+      res.status(404).send("Asset not found");
+    }
+  });
+});
+
+app.post("/assets", express.json(), (req, res) => {
+  addAsset(req.body.description, req.body.asset_sum).then((asset) => {
+    res.status(201).json(asset);
+  });
+});
+
+app.put("/assets/:id", (req, res) => {
+  updateAsset(req.params.id, req.body.description, req.body.asset_sum).then(
+    (result) => {
+      if (result.affectedRows) {
+        res.status(204).send();
+      } else {
+        res.status(404).send("Asset not found");
+      }
+    }
+  );
 });
 
 /******** AUTHENTICATION ********/

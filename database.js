@@ -78,13 +78,13 @@ async function getAssetById(id) {
     "SELECT asset_id, description, CAST(asset_sum AS DECIMAL (10,2)) AS asset_sum FROM assets WHERE asset_id = ?",
     [id]
   );
-  return rows;
+  return rows[0];
 }
 
 async function addAsset(description, asset_sum) {
   const [result] = await pool.query(
     "INSERT INTO assets (description, asset_sum) VALUES (?, ?)",
-    [description, expense_sum]
+    [description, asset_sum]
   );
   const id = result.insertId;
   return await getAssetById(id);
