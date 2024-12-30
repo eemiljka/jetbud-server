@@ -112,6 +112,16 @@ app.put("/assets/:id", (req, res) => {
   );
 });
 
+app.delete("/assets/:id", (req, res) => {
+  deleteAsset(req.params.id).then((result) => {
+    if (result.affectedRows) {
+      res.status(204).send();
+    } else {
+      res.status(404).send("Asset not found");
+    }
+  });
+});
+
 /******** AUTHENTICATION ********/
 
 // Register
