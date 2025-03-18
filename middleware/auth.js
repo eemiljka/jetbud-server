@@ -4,8 +4,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const verifyToken = (req, res, next) => {
-  const token =
-    req.body.token || req.query.token || req.headers["x-access-token"];
+  let token =
+    req.body.token ||
+    req.query.token ||
+    req.headers["x-access-token"] ||
+    req.headers["authorization"];
+
+  if (token && token.startsWith("Bearer ")) {
+    token = token.slice(7);
+  }
 
   if (!token) {
     return res.status(403).send("A token is required for authentication");

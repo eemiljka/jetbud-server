@@ -19,9 +19,10 @@ export default pool;
 /******** EXPENSES ********/
 
 // Function to get all expenses from the database
-async function getExpenses() {
+async function getExpenses(user_id) {
   const [rows] = await pool.query(
-    "SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses"
+    "SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses WHERE user_id = ?",
+    [user_id]
   );
   return rows;
 }
@@ -36,10 +37,10 @@ async function getExpenseById(id) {
 }
 
 // Function to add an expense to the database
-async function addExpense(description, expense_sum) {
+async function addExpense(description, expense_sum, user_id) {
   const [result] = await pool.query(
-    "INSERT INTO expenses (description, expense_sum) VALUES (?, ?)",
-    [description, expense_sum]
+    "INSERT INTO expenses (description, expense_sum, user_id) VALUES (?, ?, ?)",
+    [description, expense_sum, user_id]
   );
   const id = result.insertId;
   return await getExpenseById(id);

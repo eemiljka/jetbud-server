@@ -1,5 +1,4 @@
 import express from "express";
-
 import {
   getExpenseById,
   getExpenses,
@@ -19,6 +18,7 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { verifyToken } from "./middleware/auth.js";
 
+dotenv.config();
 const app = express();
 
 app.use(express.json({ limit: "50mb" }));
@@ -30,16 +30,121 @@ const corsOptions = {
   optionSuccessStatus: 200,
 };
 
-/******* ROUTES *******/
+/******** AUTHENTICATION ********/
 
-//  EXPENSES
-app.get("/expenses", (req, res) => {
-  getExpenses().then((expenses) => {
-    res.json(expenses);
-  });
+// Register
+app.post("/register", async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
+    if (!(username && password && email)) {
+      return res.status(400).send("All input is required");
+    }
+
+    const [old] = await pool.query("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+    if (old.length > 0) {
+      return res.status(409).send("User Already Exist. Please Login");
+    }
+
+    const encryptedPassword = await bcrypt.hash(password, 10);
+
+    // Insert the new user into the database
+    const [result] = await pool.query(
+      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+      [username, email, encryptedPassword]
+    );
+
+    // Query the newly inserted user
+    const [newUserRows] = await pool.query(
+      "SELECT * FROM users WHERE user_id = ?",
+      [result.insertId]
+    );
+    const newUser = newUserRows[0];
+
+    // Create token using the correct user object
+    const token = jwt.sign(
+      { user_id: newUser.user_id, email: newUser.email },
+      process.env.TOKEN_KEY,
+      { expiresIn: "2h" }
+    );
+    newUser.token = token;
+    newUser.password = undefined; // remove password before sending
+
+    res.status(201).json(newUser);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server error");
+  }
 });
 
-app.get("/expenses/:id", (req, res) => {
+// Login
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!(username && password)) {
+      return res.status(400).send("All input is required");
+    }
+
+    const [users] = await pool.query("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+    if (users.length > 0) {
+      const user = users[0];
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (validPassword) {
+        const token = jwt.sign(
+          { user_id: user.user_id, email: user.email },
+          process.env.TOKEN_KEY,
+          { expiresIn: "2h" }
+        );
+        user.token = token;
+        user.password = undefined;
+        return res.status(200).json(user);
+      }
+      return res.status(400).send("Invalid Credentials");
+    } else {
+      return res.status(400).send("User not found");
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server error");
+  }
+});
+
+// Logout
+app.post("/logout", verifyToken, (req, res) => {
+  return res.status(200).json({ message: "Successfully logged out" });
+});
+
+// Verify Token
+app.get("/tokenIsValid", cors(corsOptions), verifyToken, (req, res) => {
+  res.status(200).send("Token is valid");
+});
+
+/******* EXPENSES ROUTES *******/
+
+// Get all expenses for the logged-in user
+app.get("/expenses", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  if (!userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  getExpenses(userId)
+    .then((expenses) => {
+      if (expenses) {
+        res.json(expenses);
+      } else {
+        res.status(404).send("Expenses not found");
+      }
+    })
+    .catch((error) => {
+      res.status(500).send("Server error");
+    });
+});
+
+// Get expense by id (optional: add ownership check)
+app.get("/expenses/:id", verifyToken, (req, res) => {
   getExpenseById(req.params.id).then((expense) => {
     if (expense) {
       res.json(expense);
@@ -49,13 +154,20 @@ app.get("/expenses/:id", (req, res) => {
   });
 });
 
-app.post("/expenses", express.json(), (req, res) => {
-  addExpense(req.body.description, req.body.expense_sum).then((expense) => {
-    res.status(201).json(expense);
-  });
+// Create a new expense for the logged-in user
+app.post("/expenses", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const { description, expense_sum } = req.body;
+  if (!description || !expense_sum) {
+    return res.status(400).send("Description and expense sum are required");
+  }
+  addExpense(description, expense_sum, userId)
+    .then((expense) => res.status(201).json(expense))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
-app.delete("/expenses/:id", (req, res) => {
+// Delete an expense (optionally, add check to ensure it belongs to req.user)
+app.delete("/expenses/:id", verifyToken, (req, res) => {
   deleteExpense(req.params.id).then((result) => {
     if (result.affectedRows) {
       res.status(204).send();
@@ -65,7 +177,8 @@ app.delete("/expenses/:id", (req, res) => {
   });
 });
 
-app.put("/expenses/:id", (req, res) => {
+// Update an expense (optionally, add check to ensure it belongs to req.user)
+app.put("/expenses/:id", verifyToken, (req, res) => {
   updateExpense(req.params.id, req.body.description, req.body.expense_sum).then(
     (result) => {
       if (result.affectedRows) {
@@ -77,7 +190,7 @@ app.put("/expenses/:id", (req, res) => {
   );
 });
 
-// ASSETS
+/******* ASSETS ROUTES *******/
 app.get("/assets", (req, res) => {
   getAssets().then((assets) => {
     res.json(assets);
@@ -120,108 +233,6 @@ app.delete("/assets/:id", (req, res) => {
       res.status(404).send("Asset not found");
     }
   });
-});
-
-/******** AUTHENTICATION ********/
-
-// Register
-app.post("/register", async (req, res) => {
-  try {
-    // Get user input
-    const { username, password, email } = req.body;
-
-    // Validate user input
-    if (!(username && password && email)) {
-      res.status(400).send("All input is required");
-    }
-
-    // Check if user already exists
-    // Validate if user exists in our database
-    const [old] = await pool.query("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
-    if (old.length > 0) {
-      return res.status(409).send("User Already Exist. Please Login");
-    }
-
-    // Encrypt user password
-    const encryptedPassword = await bcrypt.hash(password, 10);
-
-    // Create user in our database
-    const user = await pool.query(
-      " INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-      [username, email, encryptedPassword]
-    );
-
-    // Create token
-    const token = jwt.sign(
-      { user_id: user.user_id, email },
-      process.env.TOKEN_KEY,
-      {
-        expiresIn: "2h",
-      }
-    );
-    user.token = token;
-
-    // Remove password from response
-    user.password = "";
-
-    // Return new user
-    res.status(201).json(user);
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-// Login
-app.post("/login", async (req, res) => {
-  // TODO: Implement user login
-  try {
-    // Get user input
-    const { username, password } = req.body;
-
-    // Validate user input
-    if (!(username && password)) {
-      res.status(400).send("All input is required");
-    }
-    // Validate if user exists in our database
-    const [user] = await pool.query("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
-
-    if (user.length > 0) {
-      // Validate user password
-      const validPassword = await bcrypt.compare(password, user[0].password);
-      if (validPassword) {
-        // Create token
-        const token = jwt.sign(
-          { user_id: user.user_id, email: user.email },
-          process.env.TOKEN_KEY,
-          {
-            expiresIn: "2h",
-          }
-        );
-        // Save user token
-        user[0].token = token;
-
-        return res.status(200).json(user[0]);
-      }
-      return res.status(400).send("Invalid Credentials");
-    }
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-// Logout
-app.post("/logout", verifyToken, (req, res) => {
-  return res.status(200).json({ message: "Successfully logged out" });
-});
-
-// Verify Token
-
-app.get("/tokenIsValid", cors(corsOptions), verifyToken, (req, res) => {
-  res.status(200).send("Token is valid");
 });
 
 app.use((err, req, res, next) => {
