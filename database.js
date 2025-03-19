@@ -39,8 +39,8 @@ async function getExpenseById(id) {
 // Function to add an expense to the database
 async function addExpense(description, expense_sum, user_id) {
   const [result] = await pool.query(
-    "INSERT INTO expenses (description, expense_sum, user_id) VALUES (?, ?, ?)",
-    [description, expense_sum, user_id]
+    "INSERT INTO expenses (description, expense_sum, user_id) VALUES (?, ?)",
+    [description, expense_sum]
   );
   const id = result.insertId;
   return await getExpenseById(id);
