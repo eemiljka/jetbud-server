@@ -178,15 +178,15 @@ app.post("/login", async (req, res) => {
   // TODO: Implement user login
   try {
     // Get user input
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Validate user input
-    if (!(username && password)) {
+    if (!(email && password)) {
       res.status(400).send("All input is required");
     }
     // Validate if user exists in our database
-    const [user] = await pool.query("SELECT * FROM users WHERE username = ?", [
-      username,
+    const [user] = await pool.query("SELECT * FROM users WHERE email = ?", [
+      email,
     ]);
 
     if (user.length > 0) {
