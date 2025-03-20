@@ -19,9 +19,10 @@ export default pool;
 /******** EXPENSES ********/
 
 // Function to get all expenses from the database
-async function getExpenses() {
+async function getExpensesForUser(user_id) {
   const [rows] = await pool.query(
-    "SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses"
+    `SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum FROM expenses WHERE user_id = ?`,
+    [user_id]
   );
   return rows;
 }
@@ -66,9 +67,10 @@ async function updateExpense(id, description, expense_sum) {
 /******** ASSETS ********/
 
 // Function to get all assets from the database
-async function getAssets() {
+async function getAssetsForUser(user_id) {
   const [rows] = await pool.query(
-    "SELECT asset_id, description, CAST(asset_sum AS DECIMAL(10,2)) AS asset_sum FROM assets"
+    `SELECT asset_id, description, CAST(asset_sum AS DECIMAL(10,2)) AS asset_sum FROM assets WHERE user_id = ?`,
+    [user_id]
   );
   return rows;
 }
@@ -106,14 +108,14 @@ async function updateAsset(id, description, asset_sum) {
 }
 
 export {
-  getExpenses,
   addExpense,
   getExpenseById,
   deleteExpense,
   updateExpense,
-  getAssets,
   getAssetById,
   addAsset,
   deleteAsset,
   updateAsset,
+  getExpensesForUser,
+  getAssetsForUser,
 };

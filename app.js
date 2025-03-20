@@ -2,11 +2,11 @@ import express from "express";
 
 import {
   getExpenseById,
-  getExpenses,
+  getExpensesForUser,
+  getAssetsForUser,
   addExpense,
   deleteExpense,
   updateExpense,
-  getAssets,
   getAssetById,
   addAsset,
   deleteAsset,
@@ -33,10 +33,11 @@ const corsOptions = {
 /******* ROUTES *******/
 
 //  EXPENSES
-app.get("/expenses", (req, res) => {
-  getExpenses().then((expenses) => {
-    res.json(expenses);
-  });
+app.get("/expenses", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  getExpensesForUser(userId)
+    .then((expenses) => res.json(expenses))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 app.get("/expenses/:id", (req, res) => {
@@ -78,10 +79,11 @@ app.put("/expenses/:id", (req, res) => {
 });
 
 // ASSETS
-app.get("/assets", (req, res) => {
-  getAssets().then((assets) => {
-    res.json(assets);
-  });
+app.get("/assets", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  getAssetsForUser(userId)
+    .then((expenses) => res.json(expenses))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 app.get("/assets/:id", (req, res) => {
@@ -175,41 +177,34 @@ app.post("/register", async (req, res) => {
 
 // Login
 app.post("/login", async (req, res) => {
-  // TODO: Implement user login
   try {
-    // Get user input
     const { email, password } = req.body;
-
-    // Validate user input
     if (!(email && password)) {
-      res.status(400).send("All input is required");
+      return res.status(400).send("All input is required");
     }
-    // Validate if user exists in our database
-    const [user] = await pool.query("SELECT * FROM users WHERE email = ?", [
+    const [users] = await pool.query(`SELECT * FROM users where email = ?`, [
       email,
     ]);
-
-    if (user.length > 0) {
-      // Validate user password
-      const validPassword = await bcrypt.compare(password, user[0].password);
+    if (users.length > 0) {
+      const user = users[0];
+      const validPassword = await bcrypt.compare(password, user.password);
       if (validPassword) {
-        // Create token
         const token = jwt.sign(
           { user_id: user.user_id, email: user.email },
           process.env.TOKEN_KEY,
-          {
-            expiresIn: "2h",
-          }
+          { expiresIn: "2h" }
         );
-        // Save user token
-        user[0].token = token;
-
-        return res.status(200).json(user[0]);
+        user.token = token;
+        user.password = undefined;
+        return res.status(200).json(user);
       }
       return res.status(400).send("Invalid Credentials");
+    } else {
+      return res.status(400).send("User does not exist");
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
+    res.status(500).send("Server error");
   }
 });
 
