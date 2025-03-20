@@ -50,10 +50,12 @@ app.get("/expenses/:id", (req, res) => {
   });
 });
 
-app.post("/expenses", express.json(), (req, res) => {
-  addExpense(req.body.description, req.body.expense_sum).then((expense) => {
-    res.status(201).json(expense);
-  });
+app.post("/expenses", verifyToken, express.json(), (req, res) => {
+  const { description, expense_sum } = req.body;
+  const userId = req.user.user_id;
+  addExpense(description, expense_sum, userId)
+    .then((expense) => res.status(201).json(expense))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 app.delete("/expenses/:id", (req, res) => {
@@ -96,10 +98,12 @@ app.get("/assets/:id", (req, res) => {
   });
 });
 
-app.post("/assets", express.json(), (req, res) => {
-  addAsset(req.body.description, req.body.asset_sum).then((asset) => {
-    res.status(201).json(asset);
-  });
+app.post("/assets", verifyToken, express.json(), (req, res) => {
+  const { description, asset_sum } = req.body;
+  const userId = req.user.user_id;
+  addAsset(description, asset_sum, userId)
+    .then((asset) => res.status(201).json(asset))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 app.put("/assets/:id", (req, res) => {

@@ -39,7 +39,7 @@ async function getExpenseById(id) {
 // Function to add an expense to the database
 async function addExpense(description, expense_sum, user_id) {
   const [result] = await pool.query(
-    "INSERT INTO expenses (description, expense_sum, user_id) VALUES (?, ?, 2)",
+    "INSERT INTO expenses (description, expense_sum, user_id) VALUES (?, ?, ?)",
     [description, expense_sum, user_id]
   );
   const id = result.insertId;
@@ -83,10 +83,10 @@ async function getAssetById(id) {
   return rows[0];
 }
 
-async function addAsset(description, asset_sum) {
+async function addAsset(description, asset_sum, user_id) {
   const [result] = await pool.query(
-    "INSERT INTO assets (description, asset_sum) VALUES (?, ?)",
-    [description, asset_sum]
+    "INSERT INTO assets (description, asset_sum, user_id) VALUES (?, ?, ?)",
+    [description, asset_sum, user_id]
   );
   const id = result.insertId;
   return await getAssetById(id);
