@@ -107,6 +107,15 @@ async function updateAsset(id, description, asset_sum) {
   return result;
 }
 
+/******** USERS ********/
+async function getUserInfo(user_id) {
+  const [rows] = await pool.query(
+    `SELECT username, email FROM users WHERE user_id = ?`,
+    [user_id]
+  );
+  return rows;
+}
+
 export {
   addExpense,
   getExpenseById,
@@ -118,4 +127,5 @@ export {
   updateAsset,
   getExpensesForUser,
   getAssetsForUser,
+  getUserInfo,
 };

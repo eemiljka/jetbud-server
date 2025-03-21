@@ -11,6 +11,7 @@ import {
   addAsset,
   deleteAsset,
   updateAsset,
+  getUserInfo,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -126,6 +127,15 @@ app.delete("/assets/:id", (req, res) => {
       res.status(404).send("Asset not found");
     }
   });
+});
+
+/******** USERS ********/
+
+app.get("/user", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  getUserInfo(userId)
+    .then((user) => res.json(user))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 /******** AUTHENTICATION ********/
