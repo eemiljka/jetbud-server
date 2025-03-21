@@ -133,49 +133,40 @@ app.delete("/assets/:id", (req, res) => {
 // Register
 app.post("/register", async (req, res) => {
   try {
-    // Get user input
     const { username, password, email } = req.body;
-
-    // Validate user input
     if (!(username && password && email)) {
       res.status(400).send("All input is required");
     }
-
-    // Check if user already exists
-    // Validate if user exists in our database
     const [old] = await pool.query("SELECT * FROM users WHERE username = ?", [
       username,
     ]);
     if (old.length > 0) {
       return res.status(409).send("User Already Exist. Please Login");
     }
-
-    // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10);
-
-    // Create user in our database
-    const user = await pool.query(
-      " INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+    const [result] = await pool.query(
+      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
       [username, email, encryptedPassword]
     );
-
-    // Create token
     const token = jwt.sign(
-      { user_id: user.user_id, email },
+      { user_id: result.insertId, email },
       process.env.TOKEN_KEY,
       {
         expiresIn: "2h",
       }
     );
-    user.token = token;
 
-    // Remove password from response
-    user.password = "";
+    const newUser = {
+      user_id: result.insertId,
+      username,
+      email,
+      token,
+    };
 
-    // Return new user
-    res.status(201).json(user);
+    return res.status(201).json(newUser);
   } catch (err) {
-    console.log(err);
+    console.error(err);
+    res.status(500).send("Server error");
   }
 });
 
