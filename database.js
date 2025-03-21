@@ -113,6 +113,7 @@ async function getUserInfo(user_id) {
     `SELECT username, email FROM users WHERE user_id = ?`,
     [user_id]
   );
+  console.log(rows);
   return rows;
 }
 

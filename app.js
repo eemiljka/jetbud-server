@@ -134,7 +134,7 @@ app.delete("/assets/:id", (req, res) => {
 app.get("/user", verifyToken, (req, res) => {
   const userId = req.user.user_id;
   getUserInfo(userId)
-    .then((user) => res.json(user))
+    .then((userInfo) => res.json(userInfo))
     .catch((err) => res.status(500).send("Server error"));
 });
 
