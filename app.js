@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 
 import {
   getExpenseById,
@@ -12,6 +12,7 @@ import {
   deleteAsset,
   updateAsset,
   getUserInfo,
+  getExpensesYears,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -127,6 +128,14 @@ app.delete("/assets/:id", (req, res) => {
       res.status(404).send("Asset not found");
     }
   });
+});
+
+/******** HISTORY ********/
+app.get("/expense-years", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  getExpensesYears(userId)
+    .then((years) => res.json(years))
+    .catch((err) => res.status(500).send("Server error"));
 });
 
 /******** USERS ********/

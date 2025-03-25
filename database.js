@@ -117,6 +117,28 @@ async function getUserInfo(user_id) {
   return rows;
 }
 
+/******** HISTORY PAGE QUERIES ********/
+async function getExpensesYears(user_id) {
+  const [rows] = await pool.query(
+    `SELECT DISTINCT YEAR (created_at) AS year FROM expenses WHERE user_id = ? ORDER BY year DESC`,
+    [user_id]
+  );
+  return rows;
+}
+
+// TODO: FIX syntax error
+async function getExpensesMonths(req, res) {
+  const { year } = req.query;
+  if (!year)
+    return res.status(400).json({ error: "Year parameter is required" });
+
+  const [rows] = await pool.query(
+    `SELECT DISTINCT MONTH(created_at) AS month FROM expenses WHERE YEAR(created_at)=? ORDER BY month`,
+    [year]
+  );
+  res.status(200).json(rows);
+}
+
 export {
   addExpense,
   getExpenseById,
@@ -129,4 +151,6 @@ export {
   getExpensesForUser,
   getAssetsForUser,
   getUserInfo,
+  getExpensesYears,
+  getExpensesMonths,
 };
