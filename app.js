@@ -13,6 +13,7 @@ import {
   updateAsset,
   getUserInfo,
   getExpensesYears,
+  getExpensesMonths,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -134,6 +135,14 @@ app.delete("/assets/:id", (req, res) => {
 app.get("/expense-years", verifyToken, (req, res) => {
   const userId = req.user.user_id;
   getExpensesYears(userId)
+    .then((years) => res.json(years))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/expense-months", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const year = req.query.year;
+  getExpensesMonths(userId, year)
     .then((years) => res.json(years))
     .catch((err) => res.status(500).send("Server error"));
 });

@@ -127,16 +127,15 @@ async function getExpensesYears(user_id) {
 }
 
 // TODO: FIX syntax error
-async function getExpensesMonths(req, res) {
-  const { year } = req.query;
-  if (!year)
-    return res.status(400).json({ error: "Year parameter is required" });
-
+async function getExpensesMonths(user_id, year) {
   const [rows] = await pool.query(
-    `SELECT DISTINCT MONTH(created_at) AS month FROM expenses WHERE YEAR(created_at)=? ORDER BY month`,
-    [year]
+    `SELECT DISTINCT MONTH(created_at) AS month 
+    FROM expenses 
+    WHERE user_id = ? AND YEAR(created_at) = ? 
+    ORDER BY month ASC`,
+    [user_id, year]
   );
-  res.status(200).json(rows);
+  return rows;
 }
 
 export {
