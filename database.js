@@ -160,6 +160,17 @@ async function getOneDaysExpenses(user_id, day) {
   return rows;
 }
 
+async function getOneMonthsExpenses(user_id, month) {
+  const [rows] = await pool.query(
+    `SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum
+    FROM expenses
+    WHERE user_id = ? AND MONTH(created_at) = ?
+    ORDER BY created_at ASC`,
+    [user_id, month]
+  );
+  return rows;
+}
+
 export {
   addExpense,
   getExpenseById,
@@ -176,4 +187,5 @@ export {
   getExpensesMonths,
   getExpensesDays,
   getOneDaysExpenses,
+  getOneMonthsExpenses,
 };

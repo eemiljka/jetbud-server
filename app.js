@@ -16,6 +16,7 @@ import {
   getExpensesMonths,
   getExpensesDays,
   getOneDaysExpenses,
+  getOneMonthsExpenses,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -162,6 +163,14 @@ app.get("/days-expenses", verifyToken, (req, res) => {
   const day = req.query.day;
   getOneDaysExpenses(userId, day)
     .then((daysExpenses) => res.json(daysExpenses))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/months-expenses", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const month = req.query.month;
+  getOneMonthsExpenses(userId, month)
+    .then((monthsExpenses) => monthsExpenses)
     .catch((err) => res.status(500).send("Server error"));
 });
 
