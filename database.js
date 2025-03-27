@@ -138,6 +138,28 @@ async function getExpensesMonths(user_id, year) {
   return rows;
 }
 
+async function getExpensesDays(user_id, month) {
+  const [rows] = await pool.query(
+    `SELECT DISTINCT DAY(created_at) AS day
+    FROM expenses
+    WHERE user_id = ? AND MONTH(created_at) = ?
+    ORDER BY day ASC`,
+    [user_id, month]
+  );
+  return rows;
+}
+
+async function getOneDaysExpenses(user_id, day) {
+  const [rows] = await pool.query(
+    `SELECT expense_id, description, CAST(expense_sum AS DECIMAL(10,2)) AS expense_sum 
+    FROM expenses
+     WHERE user_id = ? AND DAY(created_at) = ?
+     ORDER BY created_at ASC`,
+    [user_id, day]
+  );
+  return rows;
+}
+
 export {
   addExpense,
   getExpenseById,
@@ -152,4 +174,6 @@ export {
   getUserInfo,
   getExpensesYears,
   getExpensesMonths,
+  getExpensesDays,
+  getOneDaysExpenses,
 };
