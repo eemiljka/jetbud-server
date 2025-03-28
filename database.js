@@ -117,6 +117,16 @@ async function getUserInfo(user_id) {
   return rows;
 }
 
+// change username
+
+async function updateUsername(username, user_id) {
+  const [result] = await pool.query(
+    `UPDATE users SET username = ? WHERE user_id = ?`,
+    [username, user_id]
+  );
+  return result;
+}
+
 /******** HISTORY PAGE QUERIES ********/
 async function getExpensesYears(user_id) {
   const [rows] = await pool.query(
@@ -188,4 +198,5 @@ export {
   getExpensesDays,
   getOneDaysExpenses,
   getOneMonthsExpenses,
+  updateUsername,
 };

@@ -17,6 +17,7 @@ import {
   getExpensesDays,
   getOneDaysExpenses,
   getOneMonthsExpenses,
+  updateUsername,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -181,6 +182,29 @@ app.get("/user", verifyToken, (req, res) => {
   getUserInfo(userId)
     .then((userInfo) => res.json(userInfo))
     .catch((err) => res.status(500).send("Server error"));
+});
+
+// change username
+app.put("/username", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const newUsername = req.body.username;
+
+  if (!newUsername) {
+    return res.status(400).send("New username is required");
+  }
+
+  updateUsername(newUsername, userId)
+    .then((result) => {
+      if (result.affectedRows) {
+        res.json({ message: "Username updated successfully", newUsername });
+      } else {
+        res.status(404).send("User not found");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Server error");
+    });
 });
 
 /******** AUTHENTICATION ********/
