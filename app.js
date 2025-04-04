@@ -18,6 +18,7 @@ import {
   getOneDaysExpenses,
   getOneMonthsExpenses,
   updateUsername,
+  updatePassword,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -197,6 +198,29 @@ app.put("/username", verifyToken, (req, res) => {
     .then((result) => {
       if (result.affectedRows) {
         res.json({ message: "Username updated successfully", newUsername });
+      } else {
+        res.status(404).send("User not found");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Server error");
+    });
+});
+
+// change password
+app.put("/password", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const newPassword = req.body.password;
+
+  if (!newPassword) {
+    res.status(400).send("New password is required");
+  }
+
+  updatePassword(newPassword, userId)
+    .then((result) => {
+      if (result.affectedRows) {
+        res.json({ message: "Password updated successfully", newPassword });
       } else {
         res.status(404).send("User not found");
       }

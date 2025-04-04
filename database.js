@@ -127,6 +127,16 @@ async function updateUsername(username, user_id) {
   return result;
 }
 
+// change password
+
+async function updatePassword(password, user_id) {
+  const [result] = await pool.query(
+    `UPDATE users set password = ? WHERE user_id = ?`,
+    [password, user_id]
+  );
+  return result;
+}
+
 /******** HISTORY PAGE QUERIES ********/
 async function getExpensesYears(user_id) {
   const [rows] = await pool.query(
@@ -199,4 +209,5 @@ export {
   getOneDaysExpenses,
   getOneMonthsExpenses,
   updateUsername,
+  updatePassword,
 };
