@@ -1,4 +1,5 @@
 import mysql from "mysql2";
+import bcrypt from "bcrypt";
 
 // Dotenv config to read enviroment variables from .env file
 import dotenv from "dotenv";
@@ -130,9 +131,10 @@ async function updateUsername(username, user_id) {
 // change password
 
 async function updatePassword(password, user_id) {
+  const encryptedPassword = await bcrypt.hash(password, 10);
   const [result] = await pool.query(
     `UPDATE users set password = ? WHERE user_id = ?`,
-    [password, user_id]
+    [encryptedPassword, user_id]
   );
   return result;
 }
