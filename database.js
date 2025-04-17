@@ -140,6 +140,8 @@ async function updatePassword(password, user_id) {
 }
 
 /******** HISTORY PAGE QUERIES ********/
+
+// expenses
 async function getExpensesYears(user_id) {
   const [rows] = await pool.query(
     `SELECT DISTINCT YEAR (created_at) AS year FROM expenses WHERE user_id = ? ORDER BY year DESC`,
@@ -148,7 +150,6 @@ async function getExpensesYears(user_id) {
   return rows;
 }
 
-// TODO: FIX syntax error
 async function getExpensesMonths(user_id, year) {
   const [rows] = await pool.query(
     `SELECT DISTINCT MONTH(created_at) AS month 
@@ -193,6 +194,60 @@ async function getOneMonthsExpenses(user_id, month) {
   return rows;
 }
 
+// assets
+
+async function getAssetsYears(user_id) {
+  const [rows] = await pool.query(
+    `SELECT DISTINCT YEAR (created_at) AS year FROM assets WHERE user_id = ? ORDER BY year DESC`,
+    [user_id]
+  );
+  return rows;
+}
+
+async function getAssetsMonths(user_id, year) {
+  const [rows] = await pool.query(
+    `SELECT DISTINCT MONTH(created_at) AS month 
+    FROM assets 
+    WHERE user_id = ? AND YEAR(created_at) = ? 
+    ORDER BY month ASC`,
+    [user_id, year]
+  );
+  return rows;
+}
+
+async function getAssetsDays(user_id, month) {
+  const [rows] = await pool.query(
+    `SELECT DISTINCT DAY(created_at) AS day
+    FROM assets
+    WHERE user_id = ? AND MONTH(created_at) = ?
+    ORDER BY day ASC`,
+    [user_id, month]
+  );
+  return rows;
+}
+
+async function getOneDaysAssets(user_id, day) {
+  const [rows] = await pool.query(
+    `SELECT asset_id, description, CAST(asset_sum AS DECIMAL(10,2)) AS asset_sum 
+    FROM assets
+     WHERE user_id = ? AND DAY(created_at) = ?
+     ORDER BY created_at ASC`,
+    [user_id, day]
+  );
+  return rows;
+}
+
+async function getOneMonthsAssets(user_id, month) {
+  const [rows] = await pool.query(
+    `SELECT asset_id, description, CAST(asset_sum AS DECIMAL(10,2)) AS asset_sum
+    FROM assets
+    WHERE user_id = ? AND MONTH(created_at) = ?
+    ORDER BY created_at ASC`,
+    [user_id, month]
+  );
+  return rows;
+}
+
 export {
   addExpense,
   getExpenseById,
@@ -212,4 +267,9 @@ export {
   getOneMonthsExpenses,
   updateUsername,
   updatePassword,
+  getAssetsYears,
+  getAssetsMonths,
+  getAssetsDays,
+  getOneDaysAssets,
+  getOneMonthsAssets,
 };

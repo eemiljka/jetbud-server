@@ -19,6 +19,11 @@ import {
   getOneMonthsExpenses,
   updateUsername,
   updatePassword,
+  getAssetsMonths,
+  getAssetsYears,
+  getAssetsDays,
+  getOneDaysAssets,
+  getOneMonthsAssets,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -137,6 +142,8 @@ app.delete("/assets/:id", (req, res) => {
 });
 
 /******** HISTORY ********/
+
+// expenses
 app.get("/expense-years", verifyToken, (req, res) => {
   const userId = req.user.user_id;
   getExpensesYears(userId)
@@ -173,6 +180,46 @@ app.get("/months-expenses", verifyToken, (req, res) => {
   const month = req.query.month;
   getOneMonthsExpenses(userId, month)
     .then((monthsExpenses) => res.json(monthsExpenses))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+// assets
+app.get("/asset-years", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  getAssetsYears(userId)
+    .then((years) => res.json(years))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/asset-months", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const year = req.query.year;
+  getAssetsMonths(userId, year)
+    .then((months) => res.json(months))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/asset-days", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const month = req.query.month;
+  getAssetsDays(userId, month)
+    .then((days) => res.json(days))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/days-assets", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const day = req.query.day;
+  getOneDaysAssets(userId, day)
+    .then((daysAssets) => res.json(daysAssets))
+    .catch((err) => res.status(500).send("Server error"));
+});
+
+app.get("/months-assets", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const month = req.query.month;
+  getOneMonthsAssets(userId, month)
+    .then((monthsAssets) => res.json(monthsAssets))
     .catch((err) => res.status(500).send("Server error"));
 });
 
