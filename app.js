@@ -172,7 +172,7 @@ app.get("/months-expenses", verifyToken, (req, res) => {
   const userId = req.user.user_id;
   const month = req.query.month;
   getOneMonthsExpenses(userId, month)
-    .then((monthsExpenses) => monthsExpenses)
+    .then((monthsExpenses) => res.json(monthsExpenses))
     .catch((err) => res.status(500).send("Server error"));
 });
 
