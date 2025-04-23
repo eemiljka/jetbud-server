@@ -139,6 +139,16 @@ async function updatePassword(password, user_id) {
   return result;
 }
 
+// change email
+
+async function updateEmail(email, user_id) {
+  const [result] = await pool.query(
+    `UPDATE users SET email = ? WHERE user_id = ?`,
+    [email, user_id]
+  );
+  return result;
+}
+
 /******** HISTORY PAGE QUERIES ********/
 
 // expenses
@@ -272,4 +282,5 @@ export {
   getAssetsDays,
   getOneDaysAssets,
   getOneMonthsAssets,
+  updateEmail,
 };

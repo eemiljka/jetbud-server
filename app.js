@@ -24,6 +24,7 @@ import {
   getAssetsDays,
   getOneDaysAssets,
   getOneMonthsAssets,
+  updateEmail,
 } from "./database.js";
 import jwt from "jsonwebtoken";
 import pool from "./database.js";
@@ -268,6 +269,29 @@ app.put("/password", verifyToken, (req, res) => {
     .then((result) => {
       if (result.affectedRows) {
         res.json({ message: "Password updated successfully", newPassword });
+      } else {
+        res.status(404).send("User not found");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Server error");
+    });
+});
+
+// change email
+app.put("/email", verifyToken, (req, res) => {
+  const userId = req.user.user_id;
+  const newEmail = req.body.email;
+
+  if (!newEmail) {
+    return res.status(400).send("New email is required");
+  }
+
+  updateEmail(newEmail, userId)
+    .then((result) => {
+      if (result.affectedRows) {
+        res.json({ message: "Email updated successfully", newEmail });
       } else {
         res.status(404).send("User not found");
       }
